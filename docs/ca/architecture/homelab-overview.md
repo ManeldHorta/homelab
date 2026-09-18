@@ -1,100 +1,185 @@
-﻿# Visió general del Homelab
+# Arquitectura del homelab
 
-## Infraestructura física actual
+## Visió general
 
-Actualment el homelab està format per tres equips físics:
+El homelab és una infraestructura domèstica orientada a serveis, automatització, multimèdia, monitorització i proves tecnològiques.
 
-| Equip | Funció |
-|---|---|
-| Mac Mini | Host Docker amb Zabbix |
-| PCVR1 | Host Docker principal: UniFi OS, Media Stack, Tdarr i IA local |
-| PCVR2 | Tercer equip físic del homelab |
+L'arquitectura actual combina diversos sistemes físics, una infraestructura de xarxa UniFi i serveis desplegats principalment amb Docker.
 
-## Arquitectura general
+L'arquitectura es documenta separant sempre l'estat actual de les evolucions previstes.
 
-Internet
-  |
-Orange / Livebox
-  |
-Xarxa del homelab
-  |
-  +----------------+----------------+----------------+
-  |                |                |
-Mac Mini         PCVR1            PCVR2
-  |                |                |
-Docker           Docker
-Zabbix           UniFi OS
-                 Media Stack
-                 Tdarr
-                 IA local
+## Sistemes físics
 
-## Mac Mini
+### PCVR1
 
-El Mac Mini és un dels tres equips físics del homelab.
+PCVR1 és el sistema principal del homelab i també un ordinador de gaming.
 
-La seva funció actual és allotjar Docker i executar Zabbix.
+Actualment concentra bona part dels serveis Docker:
 
-UniFi OS estava anteriorment allotjat al Mac Mini, però es va traslladar a PCVR1 perquè l'espai d'emmagatzematge del Mac Mini és limitat.
+- UniFi OS;
+- Media Stack;
+- Tdarr;
+- Local AI;
+- Portainer;
+- altres serveis auxiliars.
 
-## PCVR1
+El sistema disposa d'una GPU NVIDIA RTX 4080 utilitzada per a les tasques de processament de Tdarr i per a les càrregues d'IA local quan aquestes estan actives.
 
-PCVR1 és actualment el principal equip de càrrega de treball del homelab.
+El gaming té prioritat sobre les càrregues del homelab. Per aquest motiu, alguns serveis s'executen només sota demanda o dins de finestres horàries controlades.
 
-Hi funciona Docker amb:
+### Mac Mini
 
-- UniFi OS
-- Media Stack
-- Tdarr
-- IA local
+El Mac Mini és un segon host Docker de la infraestructura.
+
+Actualment s'hi executa Zabbix per a la monitorització.
+
+La seva funció és independent de PCVR1 i permet mantenir la monitorització separada del sistema principal de serveis.
+
+### PCVR2
+
+PCVR2 és un segon ordinador de gaming connectat a la xarxa local.
+
+Actualment no allotja serveis del homelab.
+
+## Xarxa
+
+La xarxa actual utilitza un gateway domèstic i infraestructura UniFi.
+
+La infraestructura UniFi inclou:
+
+- un switch principal USW Flex 2.5G 8 PoE;
+- un switch secundari USW Flex 2.5G 5;
+- un U7 Pro;
+- un U7 Lite.
+
+Els equips principals es connecten a la infraestructura de commutació mitjançant Ethernet.
+
+La xarxa Wi-Fi utilitza actualment diferents SSID segons el tipus d'ús:
+
+- `PCVR`: gaming i realitat virtual;
+- `Dispositius`: ordinadors, mòbils i dispositius d'ús general;
+- `IoT`: dispositius domòtics i altres dispositius IoT.
+
+Aquests SSID no són VLANs 802.1Q. La segmentació real mitjançant VLANs forma part de l'arquitectura futura.
+
+La documentació específica de xarxa es troba a `docs/ca/network/`.
+
+## Plataforma de serveis
+
+La major part dels serveis s'executen amb Docker.
+
+Els desplegaments estan separats en diferents projectes Compose segons la seva funció.
+
+Les principals àrees de servei són:
 
 ### Media Stack
 
-El Media Stack inclou:
+Inclou els serveis relacionats amb la gestió i descàrrega de contingut multimèdia, com ara:
 
-- qBittorrent
-- Radarr
-- Sonarr
-- Lidarr
-- Prowlarr
-- Jackett
+- qBittorrent;
+- Sonarr;
+- Radarr;
+- Lidarr;
+- Prowlarr;
+- Jackett.
 
-Els serveis multimèdia inclouen:
+### Multimèdia
 
-- Jellyfin
-- Navidrome
-- Komga
-- Dashy
+Els serveis multimèdia actuals inclouen:
 
-Tdarr també funciona a PCVR1 i utilitza el node GPU PCVR1 per al processament de vídeo.
+- Jellyfin;
+- Navidrome;
+- Komga.
 
-### IA local
+Aquests serveis utilitzen l'estructura d'emmagatzematge multimèdia del sistema principal.
 
-L'entorn d'IA local funciona dins de Docker a PCVR1.
+### Processament multimèdia
 
-Els components documentats inclouen:
+Tdarr s'utilitza per processar i convertir contingut multimèdia.
 
-- Ollama
-- Open WebUI
-- ComfyUI
-- Coqui TTS
-- Piper
-- Presenton
-- ACE-Step
+La conversió de vídeo està orientada a H.265/HEVC i utilitza acceleració GPU NVIDIA.
 
-L'entorn d'IA es manté local expressament i està destinat a funcionar sense enviar les dades a serveis d'IA externs.
+Tdarr disposa d'un node de processament associat a PCVR1.
 
-## PCVR2
+### Intel·ligència artificial local
 
-PCVR2 és el tercer equip físic del homelab.
+PCVR1 disposa d'un stack d'IA local desplegat amb Docker.
 
-En aquest document no es detallen encara els serveis que hi funcionen.
+Inclou eines per a:
 
-L'inventari detallat de PCVR2 es documentarà posteriorment, un cop revisada la seva configuració actual.
+- models d'IA;
+- generació d'imatges;
+- generació de veu;
+- text-to-speech;
+- presentacions;
+- generació musical;
+- interfície web.
 
-## Arquitectura actual i futures ampliacions
+El stack d'IA s'activa sota demanda i no forma part de la càrrega permanent del sistema.
 
-Aquest document descriu únicament l'estat operatiu actual del homelab.
+### Monitorització
 
-Les futures modificacions de la infraestructura no es consideren part de l'arquitectura actual fins que s'hagin implantat.
+Zabbix s'utilitza per monitoritzar la infraestructura.
 
-La futura migració del Media Stack, Jellyfin, Navidrome i Komga a un NAS Synology no s'inclou en aquest document perquè encara no s'ha realitzat.
+Actualment el servidor Zabbix s'executa al Mac Mini.
+
+### Administració
+
+Portainer s'utilitza per facilitar l'administració dels contenidors Docker.
+
+## Emmagatzematge
+
+Actualment PCVR1 disposa d'un únic disc de dades D: d'aproximadament 8 TB.
+
+L'estructura principal de dades multimèdia és:
+
+```text
+D:\media\downloads
+D:\media\music
+D:\media\movies
+D:\media\tv
+```
+
+Tdarr utilitza també espai temporal separat per al processament.
+
+Actualment no hi ha una infraestructura de còpia de seguretat local independent. L'estratègia de còpies de seguretat i protecció de dades es definirà en el futur amb la migració prevista a un NAS Synology.
+
+## Accés remot
+
+L'accés remot actual als serveis es gestiona mitjançant Tailscale.
+
+La descripció específica d'aquest mecanisme es troba a:
+
+`docs/ca/network/remote-access.md`
+
+La configuració detallada no forma part d'aquest document d'arquitectura.
+
+## Operacions
+
+La infraestructura està dissenyada tenint en compte que PCVR1 és també un ordinador de gaming.
+
+La prioritat és:
+
+1. ús interactiu i gaming;
+2. serveis necessaris;
+3. processament multimèdia i altres càrregues no interactives.
+
+El Media Stack i Tdarr disposen d'una finestra operativa habitual entre les 00:00 i les 07:30.
+
+El stack d'IA local s'activa només quan és necessari.
+
+L'automatització operativa es documenta a `docs/ca/operations/`.
+
+## Arquitectura futura
+
+L'evolució prevista de l'arquitectura inclou:
+
+- substitució del gateway actual per un router/firewall propi;
+- implementació de VLANs 802.1Q reals;
+- segmentació de dispositius i serveis;
+- regles de firewall entre xarxes;
+- substitució progressiva de Tailscale per una VPN gestionada pel router;
+- migració dels serveis multimèdia a un NAS Synology;
+- implementació d'una estratègia de còpies de seguretat associada al nou sistema d'emmagatzematge.
+
+Aquestes modificacions són objectius futurs i no formen part de l'estat actual de la infraestructura.

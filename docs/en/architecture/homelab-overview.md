@@ -1,100 +1,185 @@
-﻿# Homelab Overview
+# Homelab Architecture
 
-## Current Physical Infrastructure
+## Overview
 
-The homelab currently consists of three physical systems:
+The homelab is a home infrastructure focused on services, automation, media, monitoring, and technology experimentation.
 
-| Host | Role |
-|---|---|
-| Mac Mini | Docker host running Zabbix |
-| PCVR1 | Main Docker host: UniFi OS, Media Stack, Tdarr and Local AI |
-| PCVR2 | Third physical homelab system |
+The current architecture combines several physical systems, a UniFi network infrastructure, and services mainly deployed with Docker.
 
-## High-Level Architecture
+The architecture is documented by clearly separating the current state from planned future changes.
 
-Internet
-  |
-Orange / Livebox
-  |
-Homelab Network
-  |
-  +----------------+----------------+----------------+
-  |                |                |
-Mac Mini         PCVR1            PCVR2
-  |                |                |
-Docker           Docker
-Zabbix           UniFi OS
-                 Media Stack
-                 Tdarr
-                 Local AI
+## Physical systems
 
-## Mac Mini
+### PCVR1
 
-The Mac Mini is one of the three physical systems in the homelab.
+PCVR1 is the main homelab system and is also a gaming computer.
 
-Its current role is to host Docker and run Zabbix.
+It currently hosts a large part of the Docker services:
 
-UniFi OS was previously hosted on the Mac Mini, but was moved to PCVR1 because the Mac Mini has limited local storage capacity.
+- UniFi OS;
+- Media Stack;
+- Tdarr;
+- Local AI;
+- Portainer;
+- other supporting services.
 
-## PCVR1
+The system has an NVIDIA RTX 4080 GPU used for Tdarr processing and for local AI workloads when active.
 
-PCVR1 is currently the main workload host in the homelab.
+Gaming has priority over homelab workloads. For this reason, some services run only on demand or within controlled time windows.
 
-Docker workloads running on PCVR1 include:
+### Mac Mini
 
-- UniFi OS
-- Media Stack
-- Tdarr
-- Local AI
+The Mac Mini is a second Docker host in the infrastructure.
+
+Zabbix currently runs on it for monitoring.
+
+Its role is independent from PCVR1 and allows monitoring to remain separate from the main service system.
+
+### PCVR2
+
+PCVR2 is a second gaming computer connected to the local network.
+
+It currently does not host homelab services.
+
+## Network
+
+The current network uses a home gateway and UniFi infrastructure.
+
+The UniFi infrastructure includes:
+
+- a USW Flex 2.5G 8 PoE main switch;
+- a USW Flex 2.5G 5 secondary switch;
+- a U7 Pro;
+- a U7 Lite.
+
+The main systems are connected to the switching infrastructure using Ethernet.
+
+The Wi-Fi network currently uses different SSIDs according to usage:
+
+- `PCVR`: gaming and virtual reality;
+- `Dispositius`: computers, mobile devices, and general-purpose devices;
+- `IoT`: smart-home and other IoT devices.
+
+These SSIDs are not 802.1Q VLANs. Real VLAN-based segmentation is part of the future architecture.
+
+Specific network documentation is available under `docs/en/network/`.
+
+## Service platform
+
+Most services run using Docker.
+
+Deployments are separated into different Compose projects according to their function.
+
+The main service areas are:
 
 ### Media Stack
 
-The Media Stack includes:
+Includes services related to media management and downloading, such as:
 
-- qBittorrent
-- Radarr
-- Sonarr
-- Lidarr
-- Prowlarr
-- Jackett
+- qBittorrent;
+- Sonarr;
+- Radarr;
+- Lidarr;
+- Prowlarr;
+- Jackett.
 
-Media services include:
+### Media services
 
-- Jellyfin
-- Navidrome
-- Komga
-- Dashy
+Current media services include:
 
-Tdarr also runs on PCVR1 and uses the PCVR1 GPU node for video processing.
+- Jellyfin;
+- Navidrome;
+- Komga.
 
-### Local AI
+These services use the main system's media storage structure.
 
-The Local AI environment runs inside Docker on PCVR1.
+### Media processing
 
-The documented components include:
+Tdarr is used to process and convert media content.
 
-- Ollama
-- Open WebUI
-- ComfyUI
-- Coqui TTS
-- Piper
-- Presenton
-- ACE-Step
+Video conversion is focused on H.265/HEVC and uses NVIDIA GPU acceleration.
 
-The Local AI environment is intentionally kept local and is designed to operate without sending data to external AI services.
+Tdarr has a processing node associated with PCVR1.
 
-## PCVR2
+### Local artificial intelligence
 
-PCVR2 is the third physical system in the homelab.
+PCVR1 hosts a local AI stack deployed with Docker.
 
-The services currently running on PCVR2 are not detailed in this document yet.
+It includes tools for:
 
-A detailed inventory of PCVR2 will be documented later once its current configuration has been reviewed.
+- AI models;
+- image generation;
+- voice generation;
+- text-to-speech;
+- presentations;
+- music generation;
+- web interfaces.
 
-## Current Architecture and Future Expansion
+The AI stack is started on demand and is not part of the permanent system workload.
 
-This document describes only the current operational state of the homelab.
+### Monitoring
 
-Future infrastructure changes are not considered part of the current architecture until they have actually been implemented.
+Zabbix is used to monitor the infrastructure.
 
-The planned migration of the Media Stack, Jellyfin, Navidrome and Komga to a Synology NAS is not included in this document because it has not yet been implemented.
+The Zabbix server currently runs on the Mac Mini.
+
+### Administration
+
+Portainer is used to simplify Docker container administration.
+
+## Storage
+
+PCVR1 currently has a single data disk D: of approximately 8 TB.
+
+The main media data structure is:
+
+```text
+D:\media\downloads
+D:\media\music
+D:\media\movies
+D:\media\tv
+```
+
+Tdarr also uses separate temporary space for processing.
+
+There is currently no independent local backup infrastructure. The backup and data-protection strategy will be defined as part of the planned migration to a Synology NAS.
+
+## Remote access
+
+Remote access to current services is managed using Tailscale.
+
+The specific mechanism is documented in:
+
+`docs/en/network/remote-access.md`
+
+Detailed configuration is not part of this architecture document.
+
+## Operations
+
+The infrastructure is designed around the fact that PCVR1 is also a gaming computer.
+
+The priority is:
+
+1. interactive use and gaming;
+2. required services;
+3. media processing and other non-interactive workloads.
+
+Media Stack and Tdarr normally operate within a 00:00–07:30 window.
+
+The local AI stack is started only when required.
+
+Operational automation is documented under `docs/en/operations/`.
+
+## Future architecture
+
+The planned architectural evolution includes:
+
+- replacing the current gateway with a dedicated router/firewall;
+- implementing real 802.1Q VLANs;
+- segmenting devices and services;
+- firewall rules between networks;
+- progressively replacing Tailscale with a router-managed VPN;
+- migrating media services to a Synology NAS;
+- implementing a backup strategy associated with the new storage system.
+
+These changes are future objectives and are not part of the current infrastructure state.

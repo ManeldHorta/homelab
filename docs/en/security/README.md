@@ -1,56 +1,88 @@
 # Security
 
-## Principles
+## Overview
 
-The homelab follows a local-first approach.
+Homelab security is based on separation of functions, controlled service operation, and orderly infrastructure management.
 
-The main objectives are:
+The current architecture is a home infrastructure that is still evolving. Advanced network segmentation and centralized traffic control are part of the future architecture.
 
-- Minimize unnecessary Internet exposure.
-- Keep sensitive data out of the public repository.
-- Separate public configuration from private information.
-- Apply network segmentation where appropriate.
-- Monitor infrastructure status.
+## Network and segmentation
 
-## Credentials
+The current network infrastructure uses a home gateway and UniFi equipment for local network connectivity.
 
-Credentials must never be published in the public repository.
+There are currently no 802.1Q VLANs implemented. The `PCVR`, `Dispositius`, and `IoT` Wi-Fi networks are separate SSIDs and do not constitute real VLANs.
 
-This includes:
+The future architecture will introduce a dedicated router/firewall with VLANs and access-control rules to separate different types of devices and services.
 
-- Passwords
-- Tokens
-- API keys
-- SSH keys
-- Private certificates
-- Database credentials
+## Services and Docker
 
-## Telegram
+Homelab services are mainly run with Docker and distributed across different Compose projects according to their function.
 
-Telegram notifications are part of the homelab operations.
+Portainer is used to administer the containers.
 
-The bot token and chat ID are private information and must not be included in public documentation.
+Service configurations and persistent data are kept separate from media data where required by the service configuration.
 
-## Git
+## Secrets and credentials
 
-The public repository contains infrastructure documentation without operational secrets.
+The public repository must not contain:
 
-Configuration files containing credentials, secrets or private data must remain outside the public repository.
+- passwords;
+- tokens;
+- authentication keys;
+- API secrets;
+- service credentials;
+- sensitive identifiers related to remote access.
 
-## Network
+Credentials and tokens for external services are not part of the public documentation.
 
-Network segmentation, VLANs and firewall rules are used to limit communication between different types of devices and services.
+Sensitive operational information required for recovery will be kept in the private repository or in secure storage.
 
-Details that could expose sensitive network information should be reviewed before publication.
+## Updates
 
-## Local services
+Updates to services and infrastructure components should be performed in a controlled manner.
 
-Local AI services remain inside the local infrastructure.
+Before updating:
 
-The objective is to avoid sending data used by these services to the Internet.
+1. Check the service status.
+2. Identify the expected changes.
+3. Ensure a recovery path is available when necessary.
 
-## Minimum exposure
+After updating:
 
-Only services that are actually required should be exposed.
+1. Check that the service is running.
+2. Validate the main functionality.
+3. Review logs if unexpected behaviour occurs.
 
-Ports, credentials and detailed configuration should only be documented when necessary and must never include secrets.
+## Recovery
+
+Public documentation describes the architecture and operational principles, but does not contain all details required to fully reproduce or recover the infrastructure.
+
+Detailed recovery procedures, internal configurations, and other sensitive operational data will be kept in private documentation.
+
+Secrets should remain outside Git whenever possible, including the private repository.
+
+## Future architecture
+
+The future security architecture is planned around:
+
+- a dedicated router/firewall;
+- real VLANs to separate different types of devices and services;
+- firewall rules and inter-VLAN traffic control;
+- remote access through a VPN managed by the router;
+- progressive migration of the current remote-access architecture.
+
+This design will be defined when the dedicated router is deployed.
+
+## Sensitive information
+
+Public documentation avoids publishing information that is not necessary to understand the architecture, such as:
+
+- complete internal addresses;
+- firewall configurations;
+- detailed remote-access configurations;
+- keys and tokens;
+- credentials;
+- detailed information about authorized devices;
+- data that would facilitate reproducing the internal configuration.
+
+Private documentation will act as the recovery reference and may contain the operational details required for recovery, while keeping secrets outside Git whenever possible.
